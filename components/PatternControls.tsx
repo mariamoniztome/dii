@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Pattern, Row, StitchType, ConstructionMode, StitchInstance } from '../types';
 import { STITCH_DESCRIPTIONS, STITCH_COLORS } from '../constants.tsx';
-import { suggestNextRow } from '../services/geminiService';
 import { serialService } from '../services/serialService';
 import { soundService } from '../services/soundService';
 
@@ -13,8 +12,6 @@ interface PatternControlsProps {
 
 const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }) => {
   const [selectedStitch, setSelectedStitch] = useState<StitchType>(StitchType.SC);
-  const [isAiThinking, setIsAiThinking] = useState(false);
-  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
   
   // Hardware State
   const [isConnected, setIsConnected] = useState(false);
@@ -103,12 +100,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
     setPattern(prev => ({ ...prev, rows: newRows }));
   };
 
-  const handleAiSuggest = async () => {
-    setIsAiThinking(true);
-    const suggestion = await suggestNextRow(pattern);
-    setAiSuggestion(suggestion);
-    setIsAiThinking(false);
-  };
+  // AI feature removed per user request
 
   return (
     <div className="flex flex-col h-full bg-white border-r border-gray-200 overflow-y-auto p-4 space-y-6 shadow-xl">
@@ -217,31 +209,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
         </div>
       </section>
 
-      <section className="mt-auto pt-6 border-t border-gray-100">
-        <button
-          onClick={handleAiSuggest}
-          disabled={isAiThinking}
-          className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl shadow-lg hover:opacity-90 transition-opacity font-bold text-sm flex items-center justify-center gap-2"
-        >
-          {isAiThinking ? (
-            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-          ) : (
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          )}
-          AI Suggest Next Step
-        </button>
-        {aiSuggestion && (
-          <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg animate-in fade-in slide-in-from-bottom-2">
-            <h4 className="text-[10px] font-bold text-indigo-400 uppercase mb-1 flex items-center gap-1">
-               <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
-               Stitch Assistant:
-            </h4>
-            <p className="text-xs text-indigo-900 leading-relaxed font-medium">{aiSuggestion}</p>
-          </div>
-        )}
-      </section>
+      {/* AI assistant controls removed */}
     </div>
   );
 };
