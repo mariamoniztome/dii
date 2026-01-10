@@ -1,0 +1,5 @@
+{
+  "name": "Final",
+  "description": "A sophisticated React application for designing crochet patterns with a real-time 3D visualization of stitches, supporting both flat and round constructions.",
+  "requestFramePermissions": []
+}

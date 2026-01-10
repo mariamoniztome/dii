@@ -1,0 +1,249 @@
+
+import React, { useState, useEffect } from 'react';
+import { Pattern, Row, StitchType, ConstructionMode, StitchInstance } from '../types';
+import { STITCH_DESCRIPTIONS, STITCH_COLORS } from '../constants.tsx';
+import { suggestNextRow } from '../services/geminiService';
+import { serialService } from '../services/serialService';
+import { soundService } from '../services/soundService';
+
+interface PatternControlsProps {
+  pattern: Pattern;
+  setPattern: React.Dispatch<React.SetStateAction<Pattern>>;
+}
+
+const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }) => {
+  const [selectedStitch, setSelectedStitch] = useState<StitchType>(StitchType.SC);
+  const [isAiThinking, setIsAiThinking] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+  
+  // Hardware State
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastRemoteStitch, setLastRemoteStitch] = useState<string | null>(null);
+  const [sensorPreview, setSensorPreview] = useState<string | null>(null);
+
+  const addRow = () => {
+    const newRow: Row = {
+      id: Math.random().toString(36).substr(2, 9),
+      stitches: []
+    };
+    setPattern(prev => ({ ...prev, rows: [...prev.rows, newRow] }));
+    soundService.playConnect();
+  };
+
+  const addStitchToCurrentRow = (typeToUse?: StitchType) => {
+    const type = typeToUse || selectedStitch;
+    
+    setPattern(prev => {
+      const rows = [...prev.rows];
+      if (rows.length === 0) {
+        rows.push({ id: Math.random().toString(36).substr(2, 9), stitches: [] });
+      }
+      
+      const lastRowIndex = rows.length - 1;
+      const newStitch: StitchInstance = {
+        id: Math.random().toString(36).substr(2, 9),
+        type: type,
+        color: STITCH_COLORS[lastRowIndex % STITCH_COLORS.length]
+      };
+
+      rows[lastRowIndex] = {
+        ...rows[lastRowIndex],
+        stitches: [...rows[lastRowIndex].stitches, newStitch]
+      };
+
+      return { ...prev, rows };
+    });
+
+    soundService.playStitch();
+  };
+
+  const handleConnect = async () => {
+    if (isConnected) {
+      await serialService.disconnect();
+      setIsConnected(false);
+      return;
+    }
+
+    const success = await serialService.requestPort();
+    if (success) {
+      setIsConnected(true);
+      soundService.playConnect();
+      serialService.startListening((cmd) => {
+        // Handle "preview:sc" format for KS0031 Potentiometer
+        if (cmd.startsWith('preview:')) {
+          const pType = cmd.split(':')[1] as StitchType;
+          if (Object.values(StitchType).includes(pType)) {
+            setSensorPreview(pType);
+            setSelectedStitch(pType);
+          }
+          return;
+        }
+
+        // Handle direct stitch trigger for KS0012 Touch
+        const mappedType = Object.values(StitchType).find(t => t === cmd);
+        if (mappedType) {
+          addStitchToCurrentRow(mappedType as StitchType);
+          setLastRemoteStitch(mappedType);
+          setTimeout(() => setLastRemoteStitch(null), 800);
+        }
+      });
+    }
+  };
+
+  const removeLastStitch = () => {
+    if (pattern.rows.length === 0) return;
+    const lastRowIndex = pattern.rows.length - 1;
+    const lastRow = pattern.rows[lastRowIndex];
+    if (lastRow.stitches.length === 0) {
+      setPattern(prev => ({ ...prev, rows: prev.rows.slice(0, -1) }));
+      return;
+    }
+    const newRows = [...pattern.rows];
+    newRows[lastRowIndex] = { ...lastRow, stitches: lastRow.stitches.slice(0, -1) };
+    setPattern(prev => ({ ...prev, rows: newRows }));
+  };
+
+  const handleAiSuggest = async () => {
+    setIsAiThinking(true);
+    const suggestion = await suggestNextRow(pattern);
+    setAiSuggestion(suggestion);
+    setIsAiThinking(false);
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-white border-r border-gray-200 overflow-y-auto p-4 space-y-6 shadow-xl">
+      <div>
+        <h1 className="text-2xl font-bold text-indigo-800 mb-1">StitchCraft 3D</h1>
+        <p className="text-sm text-gray-500">Design your next masterpiece</p>
+      </div>
+
+      {/* Advanced Sensor Hook Connection */}
+      <section className="bg-slate-900 rounded-2xl p-4 text-white shadow-2xl relative overflow-hidden border border-slate-700">
+        <div className="relative z-10">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Advanced Sensor Mode</h3>
+              <span className="text-[9px] text-slate-500 font-bold">KS0012 + KS0031 Active</span>
+            </div>
+            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)] animate-pulse' : 'bg-slate-700'}`} />
+          </div>
+          
+          <div className="space-y-3 mb-4">
+             <div className="flex items-center justify-between text-[10px] bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+                <span className="text-slate-400">Selector (Pot)</span>
+                <span className={`font-mono ${sensorPreview ? 'text-amber-400' : 'text-slate-600'}`}>
+                  {sensorPreview?.toUpperCase() || '---'}
+                </span>
+             </div>
+             <div className="flex items-center justify-between text-[10px] bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+                <span className="text-slate-400">Action (Touch)</span>
+                <span className={`font-mono ${lastRemoteStitch ? 'text-green-400' : 'text-slate-600'}`}>
+                  {lastRemoteStitch ? 'TRIGGERED!' : 'WAITING...'}
+                </span>
+             </div>
+          </div>
+
+          <button 
+            onClick={handleConnect}
+            className={`w-full py-2.5 rounded-xl text-xs font-black transition-all border shadow-lg ${isConnected ? 'bg-rose-500/10 border-rose-500/50 text-rose-400 hover:bg-rose-500/20' : 'bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-500 hover:-translate-y-0.5'}`}
+          >
+            {isConnected ? 'Stop Sensor Sync' : 'Initialize Sensor Hook'}
+          </button>
+        </div>
+        
+        {/* Animated grid background for sensor panel */}
+        <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
+      </section>
+
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Construction</h3>
+        <div className="flex bg-gray-100 rounded-lg p-1">
+          <button
+            onClick={() => setPattern(p => ({ ...p, mode: ConstructionMode.FLAT }))}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${pattern.mode === ConstructionMode.FLAT ? 'bg-white shadow text-indigo-600' : 'text-gray-500'}`}
+          >
+            Flat Rows
+          </button>
+          <button
+            onClick={() => setPattern(p => ({ ...p, mode: ConstructionMode.ROUND }))}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${pattern.mode === ConstructionMode.ROUND ? 'bg-white shadow text-indigo-600' : 'text-gray-500'}`}
+          >
+            In the Round
+          </button>
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Stitch Library</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {Object.values(StitchType).map((type) => (
+            <button
+              key={type}
+              onClick={() => setSelectedStitch(type)}
+              className={`p-2 text-xs border rounded-lg flex flex-col items-center justify-center transition-all ${selectedStitch === type ? 'border-indigo-500 bg-indigo-50 text-indigo-700 scale-[1.02] shadow-sm' : 'border-gray-200 hover:border-indigo-300'}`}
+            >
+              <span className="font-bold uppercase">{type}</span>
+              <span className="text-[10px] text-gray-400 capitalize">{type === 'inc' ? 'Increase' : type === 'dec' ? 'Decrease' : 'Basic'}</span>
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-gray-500 bg-gray-50 p-2 rounded italic border-l-2 border-indigo-200">
+          {STITCH_DESCRIPTIONS[selectedStitch]}
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Manual Override</h3>
+        <button
+          onClick={() => addStitchToCurrentRow()}
+          className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg transition-all font-bold text-sm active:scale-95"
+        >
+          Add {selectedStitch.toUpperCase()} manually
+        </button>
+        
+        <div className="flex gap-2">
+          <button
+            onClick={addRow}
+            className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold border border-gray-200 transition-colors"
+          >
+            New Row
+          </button>
+          <button
+            onClick={removeLastStitch}
+            className="flex-1 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold border border-red-100 transition-colors"
+          >
+            Undo Last
+          </button>
+        </div>
+      </section>
+
+      <section className="mt-auto pt-6 border-t border-gray-100">
+        <button
+          onClick={handleAiSuggest}
+          disabled={isAiThinking}
+          className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl shadow-lg hover:opacity-90 transition-opacity font-bold text-sm flex items-center justify-center gap-2"
+        >
+          {isAiThinking ? (
+            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          )}
+          AI Suggest Next Step
+        </button>
+        {aiSuggestion && (
+          <div className="mt-3 p-3 bg-indigo-50 border border-indigo-100 rounded-lg animate-in fade-in slide-in-from-bottom-2">
+            <h4 className="text-[10px] font-bold text-indigo-400 uppercase mb-1 flex items-center gap-1">
+               <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse" />
+               Stitch Assistant:
+            </h4>
+            <p className="text-xs text-indigo-900 leading-relaxed font-medium">{aiSuggestion}</p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+};
+
+export default PatternControls;
