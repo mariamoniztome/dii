@@ -73,13 +73,16 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = ({ pattern }) => {
     }
 
     renderPattern(pattern, group);
-  }, [pattern]);
+    
+    // Calculate total stitches for dependency tracking
+    const totalStitches = pattern.rows.reduce((sum, row) => sum + row.stitches.length, 0);
+  }, [pattern, pattern.rows.length, pattern.rows.map(r => r.stitches.length).join('-')]);
 
   // Fix: Updated color parameter to accept string | number to handle both hex strings and numeric colors
   const createStitchMesh = (type: StitchType, color: string | number, twisted: boolean = false) => {
     const height = STITCH_HEIGHTS[type] || 0.6;
-    const baseWidth = type === StitchType.DEC ? 0.4 : -0.25;
-    const topWidth = type === StitchType.INC ? 0.35 : 0.25;
+    const baseWidth = -0.25;
+    const topWidth = 0.25;
 
     const shape = new THREE.Shape();
     const radius = 0.08;
