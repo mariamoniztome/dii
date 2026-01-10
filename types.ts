@@ -4,9 +4,9 @@ export enum StitchType {
   DC = 'dc',      // Double Crochet
   HDC = 'hdc',    // Half Double Crochet
   TR = 'tr',      // Treble Crochet
-  INC = 'inc',    // Increase (2 sc in one)
-  DEC = 'dec',    // Decrease (sc2tog)
-  SLST = 'slst'   // Slip stitch
+  // INC = 'inc',    // Increase (2 sc in one)
+  // DEC = 'dec',    // Decrease (sc2tog)
+  // SLST = 'slst'   // Slip stitch
 }
 
 export enum ConstructionMode {

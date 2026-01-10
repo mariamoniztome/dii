@@ -21,11 +21,11 @@ export const STITCH_HEIGHTS: Record<string, number> = {
 };
 
 export const STITCH_DESCRIPTIONS: Record<string, string> = {
-  sc: "Standard single crochet (Height: ~1 chain)",
-  dc: "Taller double crochet (Height: ~3 chains)",
-  hdc: "Medium half-double (Height: ~2 chains)",
-  tr: "Very tall treble (Height: ~4 chains)",
-  inc: "Two stitches worked into one base",
-  dec: "Two stitches joined at the top",
-  slst: "Flat joining stitch"
+  sc: "Ponto baixo padrão (Altura: ~1 corr.)",
+  dc: "Ponto alto mais alto (Altura: ~3 corr.)",
+  hdc: "Meio ponto alto (Altura: ~2 corr.)",
+  tr: "Ponto alto duplo (Altura: ~4 corr.)",
+  inc: "Dois pontos trabalhados na mesma base",
+  dec: "Dois pontos fechados juntos no topo",
+  slst: "Ponto baixíssimo para unir"
 };

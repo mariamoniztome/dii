@@ -106,8 +106,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
   return (
     <div className="flex flex-col h-full bg-white border-r border-gray-200 overflow-y-auto p-4 space-y-6 shadow-xl">
       <div>
-        <h1 className="text-2xl font-bold text-indigo-800 mb-1">StitchCraft 3D</h1>
-        <p className="text-sm text-gray-500">Design your next masterpiece</p>
+        <h1 className="text-2xl font-bold text-indigo-800 mb-1">Crochet Híbrido</h1>
       </div>
 
       {/* Advanced Sensor Hook Connection */}
@@ -115,23 +114,23 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-4">
             <div className="flex flex-col">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Advanced Sensor Mode</h3>
-              <span className="text-[9px] text-slate-500 font-bold">KS0012 + KS0031 Active</span>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Modo de Sensores Avançado</h3>
+              <span className="text-[9px] text-slate-500 font-bold">ADXL345 (Movimento) + Sensor de Toque</span>
             </div>
             <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)] animate-pulse' : 'bg-slate-700'}`} />
           </div>
           
           <div className="space-y-3 mb-4">
              <div className="flex items-center justify-between text-[10px] bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                <span className="text-slate-400">Selector (Pot)</span>
+                <span className="text-slate-400">Seletor (Pot)</span>
                 <span className={`font-mono ${sensorPreview ? 'text-amber-400' : 'text-slate-600'}`}>
                   {sensorPreview?.toUpperCase() || '---'}
                 </span>
              </div>
              <div className="flex items-center justify-between text-[10px] bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                <span className="text-slate-400">Action (Touch)</span>
+                <span className="text-slate-400">Ação (Toque)</span>
                 <span className={`font-mono ${lastRemoteStitch ? 'text-green-400' : 'text-slate-600'}`}>
-                  {lastRemoteStitch ? 'TRIGGERED!' : 'WAITING...'}
+                  {lastRemoteStitch ? 'ACIONADO!' : 'A AGUARDAR...'}
                 </span>
              </div>
           </div>
@@ -140,7 +139,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
             onClick={handleConnect}
             className={`w-full py-2.5 rounded-xl text-xs font-black transition-all border shadow-lg ${isConnected ? 'bg-rose-500/10 border-rose-500/50 text-rose-400 hover:bg-rose-500/20' : 'bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-500 hover:-translate-y-0.5'}`}
           >
-            {isConnected ? 'Stop Sensor Sync' : 'Initialize Sensor Hook'}
+            {isConnected ? 'Parar Sincronização' : 'Iniciar Ligação aos Sensores'}
           </button>
         </div>
         
@@ -149,25 +148,25 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
       </section>
 
       <section>
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Construction</h3>
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Construção</h3>
         <div className="flex bg-gray-100 rounded-lg p-1">
           <button
             onClick={() => setPattern(p => ({ ...p, mode: ConstructionMode.FLAT }))}
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${pattern.mode === ConstructionMode.FLAT ? 'bg-white shadow text-indigo-600' : 'text-gray-500'}`}
           >
-            Flat Rows
+            Carreiras Planas
           </button>
           <button
             onClick={() => setPattern(p => ({ ...p, mode: ConstructionMode.ROUND }))}
             className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${pattern.mode === ConstructionMode.ROUND ? 'bg-white shadow text-indigo-600' : 'text-gray-500'}`}
           >
-            In the Round
+            Em Círculo
           </button>
         </div>
       </section>
 
       <section>
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Stitch Library</h3>
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Biblioteca de Pontos</h3>
         <div className="grid grid-cols-2 gap-2">
           {Object.values(StitchType).map((type) => (
             <button
@@ -176,7 +175,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
               className={`p-2 text-xs border rounded-lg flex flex-col items-center justify-center transition-all ${selectedStitch === type ? 'border-indigo-500 bg-indigo-50 text-indigo-700 scale-[1.02] shadow-sm' : 'border-gray-200 hover:border-indigo-300'}`}
             >
               <span className="font-bold uppercase">{type}</span>
-              <span className="text-[10px] text-gray-400 capitalize">{type === 'inc' ? 'Increase' : type === 'dec' ? 'Decrease' : 'Basic'}</span>
+              {/* <span className="text-[10px] text-gray-400 capitalize">{type === 'inc' ? 'Aumento' : type === 'dec' ? 'Diminuição' : 'Básico'}</span> */}
             </button>
           ))}
         </div>
@@ -186,12 +185,12 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Manual Override</h3>
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Controlo Manual</h3>
         <button
           onClick={() => addStitchToCurrentRow()}
           className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg transition-all font-bold text-sm active:scale-95"
         >
-          Add {selectedStitch.toUpperCase()} manually
+          Adicionar {selectedStitch.toUpperCase()} manualmente
         </button>
         
         <div className="flex gap-2">
@@ -199,13 +198,13 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
             onClick={addRow}
             className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold border border-gray-200 transition-colors"
           >
-            New Row
+            Nova Carreira
           </button>
           <button
             onClick={removeLastStitch}
             className="flex-1 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold border border-red-100 transition-colors"
           >
-            Undo Last
+            Desfazer Último
           </button>
         </div>
       </section>
