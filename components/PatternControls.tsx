@@ -51,7 +51,8 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
       return { ...prev, rows };
     });
 
-    soundService.playStitch();
+    // Play audio cue for stitch action
+    soundService.playStitch(type);
   };
 
   const handleConnect = async () => {
@@ -110,7 +111,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
       </div>
 
       {/* Advanced Sensor Hook Connection */}
-      <section className="bg-slate-900 rounded-2xl p-4 text-white shadow-2xl relative overflow-hidden border border-slate-700">
+      <section className="bg-slate-900 rounded-2xl p-4 text-white min-h-32 shadow-2xl relative overflow-hidden border border-slate-700">
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-4">
             <div className="flex flex-col">

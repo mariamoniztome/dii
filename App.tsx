@@ -12,7 +12,7 @@ const App: React.FC = () => {
     rows: []
   });
 
-  const [activeView, setActiveView] = useState<'split' | '3d' | '2d'>('split');
+  const [activeView, setActiveView] = useState<'3d' | '2d'>('3d');
 
   const totalStitches = pattern.rows.reduce((sum, row) => sum + row.stitches.length, 0);
 
@@ -30,19 +30,13 @@ const App: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-gray-500 uppercase tracking-widest mr-4">View Mode</span>
             <div className="flex bg-gray-100 p-1 rounded-lg">
-              <button 
-                onClick={() => setActiveView('split')}
-                className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeView === 'split' ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                Split Screen
-              </button>
-              <button 
+              <button
                 onClick={() => setActiveView('3d')}
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeView === '3d' ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
               >
-                3D Only
+                3D View
               </button>
-              <button 
+              <button
                 onClick={() => setActiveView('2d')}
                 className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeView === '2d' ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}
               >
@@ -50,26 +44,19 @@ const App: React.FC = () => {
               </button>
             </div>
           </div>
-
-          <div className="flex gap-4 text-xs font-bold text-gray-400">
-            <div className="flex gap-1.5 items-center">
-              <span className="w-2 h-2 rounded-full bg-green-400"></span>
-              Live Sync Active
-            </div>
-          </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {(activeView === '3d' || activeView === 'split') && (
-            <div className={`relative h-full transition-all duration-300 ${activeView === 'split' ? 'w-1/2 border-r border-gray-200' : 'w-full'}`}>
+        <div className="flex-1 relative overflow-hidden">
+          {activeView === '3d' && (
+            <div className="relative h-full w-full">
               <div className="absolute top-4 left-4 z-10 bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">3D Render</div>
               <CrochetCanvas pattern={pattern} />
             </div>
           )}
-          
-          {(activeView === '2d' || activeView === 'split') && (
-            <div className={`relative h-full transition-all duration-300 ${activeView === 'split' ? 'w-1/2' : 'w-full'}`}>
+
+          {activeView === '2d' && (
+            <div className="relative h-full w-full">
               <div className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">2D Pattern Chart</div>
               <Pattern2D pattern={pattern} setPattern={setPattern} />
             </div>
@@ -77,7 +64,7 @@ const App: React.FC = () => {
         </div>
 
         {/* Stats Overlay (Bottom Right) */}
-        <div className="absolute bottom-6 right-6 flex flex-col gap-2 pointer-events-none z-10">
+        <div className="absolute bottom-6 left-6 flex flex-col gap-2 pointer-events-none z-10">
           <div className="bg-white/90 backdrop-blur p-4 rounded-2xl shadow-xl border border-white/20 pointer-events-auto min-w-[180px]">
             <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Stats</h2>
             <div className="grid grid-cols-2 gap-y-2 gap-x-4">
