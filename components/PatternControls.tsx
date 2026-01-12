@@ -19,7 +19,6 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
   const [sensorPreview, setSensorPreview] = useState<string | null>(null);
 
   const addRow = () => {
-    console.log('[PatternControls] addRow');
     const newRow: Row = {
       id: Math.random().toString(36).substr(2, 9),
       stitches: []
@@ -29,9 +28,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
   };
 
   const addStitchToCurrentRow = (typeToUse?: StitchType) => {
-    const type = typeToUse || selectedStitch;
-    console.log('[PatternControls] addStitchToCurrentRow', { type });
-    
+    const type = typeToUse || selectedStitch;    
     setPattern(prev => {
       const rows = [...prev.rows];
       if (rows.length === 0) {
@@ -91,7 +88,6 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
   };
 
   const removeLastStitch = () => {
-    console.log('[PatternControls] removeLastStitch');
     if (pattern.rows.length === 0) return;
     const lastRowIndex = pattern.rows.length - 1;
     const lastRow = pattern.rows[lastRowIndex];

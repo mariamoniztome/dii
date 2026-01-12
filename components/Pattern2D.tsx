@@ -19,12 +19,6 @@ const Pattern2D: React.FC<Pattern2DProps> = ({ pattern, setPattern }) => {
 
   useEffect(() => {
     const totalStitches = pattern.rows.reduce((sum, row) => sum + row.stitches.length, 0);
-    console.log('[Pattern2D] pattern change', {
-      mode: pattern.mode,
-      rows: pattern.rows.length,
-      rowStitchCounts: pattern.rows.map(r => r.stitches.length),
-      totalStitches,
-    });
   }, [pattern]);
 
   // Zoom and Pan state
@@ -66,11 +60,6 @@ const Pattern2D: React.FC<Pattern2DProps> = ({ pattern, setPattern }) => {
   };
 
   const renderFlatGrid = () => {
-    console.log('[Pattern2D] renderFlatGrid', {
-      rows: pattern.rows.length,
-      rowStitchCounts: pattern.rows.map(r => r.stitches.length),
-    });
-
     const maxStitches = Math.max(...pattern.rows.map(r => r.stitches.length), 0);
     const cellSize = 30;
     const padding = 20;
@@ -115,11 +104,6 @@ const Pattern2D: React.FC<Pattern2DProps> = ({ pattern, setPattern }) => {
   };
 
   const renderRoundGrid = () => {
-    console.log('[Pattern2D] renderRoundGrid', {
-      rows: pattern.rows.length,
-      rowStitchCounts: pattern.rows.map(r => r.stitches.length),
-    });
-
     const size = 600;
     const center = size / 2;
     const step = 40;

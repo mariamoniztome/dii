@@ -19,23 +19,12 @@ const App: React.FC = () => {
   // Force default view to 3D on mount (covers Fast Refresh persisting a prior tab)
   useEffect(() => {
     if (activeView !== '3d') {
-      console.log('[App] forcing default view to 3d', { prev: activeView });
       setActiveView('3d');
     }
   }, []);
 
   useEffect(() => {
-    console.log('[App] activeView changed', { activeView });
-  }, [activeView]);
-
-  useEffect(() => {
     const rowStitchCounts = pattern.rows.map(r => r.stitches.length);
-    console.log('[App] pattern updated', {
-      mode: pattern.mode,
-      rows: pattern.rows.length,
-      rowStitchCounts,
-      totalStitches,
-    });
   }, [pattern, totalStitches]);
 
   return (
@@ -74,7 +63,6 @@ const App: React.FC = () => {
             <div className="relative h-full w-full">
               <div className="absolute top-4 left-4 z-10 bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">Render 3D</div>
               <CrochetCanvas
-                // Force a fresh WebGL scene when the pattern changes to avoid stale renders
                 key={`${pattern.mode}-${pattern.rows.length}-${pattern.rows.map(r => r.stitches.length).join('-')}`}
                 pattern={pattern}
               />
