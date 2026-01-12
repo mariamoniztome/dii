@@ -16,6 +16,16 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = ({ pattern }) => {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    console.log('[CrochetCanvas] mount', {
+      container: {
+        w: containerRef.current.clientWidth,
+        h: containerRef.current.clientHeight,
+      },
+      mode: pattern.mode,
+      rows: pattern.rows.length,
+      rowStitchCounts: pattern.rows.map(r => r.stitches.length),
+    });
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf9fafb);
     scene.fog = new THREE.Fog(0xf9fafb, 15, 60);
@@ -67,6 +77,11 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = ({ pattern }) => {
 
   useEffect(() => {
     if (!groupRef.current) return;
+    console.log('[CrochetCanvas] pattern effect start', {
+      mode: pattern.mode,
+      rows: pattern.rows.length,
+      rowStitchCounts: pattern.rows.map(r => r.stitches.length),
+    });
     const group = groupRef.current;
     while (group.children.length > 0) {
       group.remove(group.children[0]);
@@ -76,6 +91,7 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = ({ pattern }) => {
     
     // Calculate total stitches for dependency tracking
     const totalStitches = pattern.rows.reduce((sum, row) => sum + row.stitches.length, 0);
+    console.log('[CrochetCanvas] pattern effect end', { totalStitches });
   }, [pattern, pattern.rows.length, pattern.rows.map(r => r.stitches.length).join('-')]);
 
   // Fix: Updated color parameter to accept string | number to handle both hex strings and numeric colors
@@ -129,6 +145,11 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = ({ pattern }) => {
   };
 
   const renderPattern = (pattern: Pattern, group: THREE.Group) => {
+    console.log('[CrochetCanvas] renderPattern', {
+      mode: pattern.mode,
+      rows: pattern.rows.length,
+      rowStitchCounts: pattern.rows.map(r => r.stitches.length),
+    });
     // Fix: Using a string hex value for default color to maintain consistency with other stitch colors
     const defaultColor = '#f0e6dc';
     let currentY = 0;
