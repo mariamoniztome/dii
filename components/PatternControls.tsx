@@ -109,6 +109,10 @@ const PatternControls: React.FC<PatternControlsProps> = ({
           return;
         }
 
+        if (cmd === "row") {
+  addRow();
+  return;
+}
         // Handle direct stitch trigger for KS0012 Touch
         const mappedType = Object.values(StitchType).find((t) => t === cmd);
         if (mappedType) {
