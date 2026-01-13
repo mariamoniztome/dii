@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useRef, useEffect, useImperativeHandle, forwardRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Pattern, ConstructionMode, StitchType } from '../types';
@@ -17,12 +17,32 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
   const sceneRef = useRef<THREE.Scene | null>(null);
   const groupRef = useRef<THREE.Group | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const [cameraDistance, setCameraDistance] = useState(15);
+
+  const controlsRef = useRef<OrbitControls | null>(null);
 
   useImperativeHandle(ref, () => ({
     getCanvasElement: () => {
       return rendererRef.current?.domElement || null;
     }
   }));
+
+  // Update camera distance when zoom buttons are clicked
+  useEffect(() => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    
+    // Smoothly update camera position
+    const currentZ = cameraRef.current.position.z;
+    const diff = Math.abs(cameraDistance - currentZ);
+    
+    if (diff > 0.1) {
+      cameraRef.current.position.z = cameraDistance;
+    }
+    
+    // Update controls to track the new camera position
+    controlsRef.current.update();
+  }, [cameraDistance]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -35,6 +55,7 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
     const camera = new THREE.PerspectiveCamera(45, containerRef.current.clientWidth / containerRef.current.clientHeight, 0.1, 1000);
     camera.position.set(0, 8, 15);
     camera.lookAt(0, 0, 0);
+    cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
@@ -54,17 +75,16 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
     scene.add(group);
     groupRef.current = group;
 
-    // Add OrbitControls for rotation and zoom
+    // Add OrbitControls for rotation only (disable zoom since we use ViewControls)
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.autoRotate = false;
-    controls.enableZoom = true;
+    controls.enableZoom = false; // Disable OrbitControls zoom to avoid conflicts
     controls.enablePan = false;
-    controls.minDistance = 5;
-    controls.maxDistance = 50;
     controls.target.set(0, 0, 0);
     controls.update();
+    controlsRef.current = controls;
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -84,9 +104,18 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
     return () => {
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
-      if (containerRef.current) containerRef.current.removeChild(renderer.domElement);
+      if (containerRef.current && renderer.domElement.parentNode === containerRef.current) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (!cameraRef.current || !controlsRef.current) return;
+    cameraRef.current.position.z = cameraDistance;
+    cameraRef.current.updateProjectionMatrix();
+    controlsRef.current.update();
+  }, [cameraDistance]);
 
   useEffect(() => {
     if (!groupRef.current) return;
@@ -197,7 +226,9 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
     });
   };
 
-  return <div ref={containerRef} className="w-full h-full cursor-move" />;
+  return (
+    <div ref={containerRef} className="w-full h-full cursor-move" />
+  );
 });
 
 export default CrochetCanvas;

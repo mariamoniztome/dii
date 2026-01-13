@@ -1,13 +1,27 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { Pattern, Row, StitchType, ConstructionMode, StitchInstance } from '../types';
-import { STITCH_DESCRIPTIONS, STITCH_COLORS } from '../constants.tsx';
-import { serialService } from '../services/serialService';
-import { soundService } from '../services/soundService';
-import { exportService } from '../services/exportService';
-import { CrochetCanvasRef } from './CrochetCanvas';
-import { Pattern2DRef } from './Pattern2D';
-import { Download, Camera, FileJson, BarChart3, File, ChevronDown, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  Pattern,
+  Row,
+  StitchType,
+  ConstructionMode,
+  StitchInstance,
+} from "../types";
+import { STITCH_DESCRIPTIONS, STITCH_COLORS } from "../constants.tsx";
+import { serialService } from "../services/serialService";
+import { soundService } from "../services/soundService";
+import { exportService } from "../services/exportService";
+import { CrochetCanvasRef } from "./CrochetCanvas";
+import { Pattern2DRef } from "./Pattern2D";
+import {
+  Download,
+  Camera,
+  FileJson,
+  BarChart3,
+  File,
+  ChevronDown,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 interface PatternControlsProps {
   pattern: Pattern;
@@ -16,10 +30,17 @@ interface PatternControlsProps {
   pattern2DRef?: React.RefObject<Pattern2DRef>;
 }
 
-const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, canvasRef, pattern2DRef }) => {
-  const [selectedStitch, setSelectedStitch] = useState<StitchType>(StitchType.SC);
+const PatternControls: React.FC<PatternControlsProps> = ({
+  pattern,
+  setPattern,
+  canvasRef,
+  pattern2DRef,
+}) => {
+  const [selectedStitch, setSelectedStitch] = useState<StitchType>(
+    StitchType.SC
+  );
   const [showExportMenu, setShowExportMenu] = useState(false);
-  
+
   // Hardware State
   const [isConnected, setIsConnected] = useState(false);
   const [lastRemoteStitch, setLastRemoteStitch] = useState<string | null>(null);
@@ -28,30 +49,33 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
   const addRow = () => {
     const newRow: Row = {
       id: Math.random().toString(36).substr(2, 9),
-      stitches: []
+      stitches: [],
     };
-    setPattern(prev => ({ ...prev, rows: [...prev.rows, newRow] }));
+    setPattern((prev) => ({ ...prev, rows: [...prev.rows, newRow] }));
     soundService.playConnect();
   };
 
   const addStitchToCurrentRow = (typeToUse?: StitchType) => {
-    const type = typeToUse || selectedStitch;    
-    setPattern(prev => {
+    const type = typeToUse || selectedStitch;
+    setPattern((prev) => {
       const rows = [...prev.rows];
       if (rows.length === 0) {
-        rows.push({ id: Math.random().toString(36).substr(2, 9), stitches: [] });
+        rows.push({
+          id: Math.random().toString(36).substr(2, 9),
+          stitches: [],
+        });
       }
-      
+
       const lastRowIndex = rows.length - 1;
       const newStitch: StitchInstance = {
         id: Math.random().toString(36).substr(2, 9),
         type: type,
-        color: STITCH_COLORS[lastRowIndex % STITCH_COLORS.length]
+        color: STITCH_COLORS[lastRowIndex % STITCH_COLORS.length],
       };
 
       rows[lastRowIndex] = {
         ...rows[lastRowIndex],
-        stitches: [...rows[lastRowIndex].stitches, newStitch]
+        stitches: [...rows[lastRowIndex].stitches, newStitch],
       };
 
       return { ...prev, rows };
@@ -74,8 +98,8 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
       soundService.playConnect();
       serialService.startListening((cmd) => {
         // Handle "preview:sc" format for KS0031 Potentiometer
-        if (cmd.startsWith('preview:')) {
-          const pType = cmd.split(':')[1] as StitchType;
+        if (cmd.startsWith("preview:")) {
+          const pType = cmd.split(":")[1] as StitchType;
           if (Object.values(StitchType).includes(pType)) {
             setSensorPreview(pType);
             setSelectedStitch(pType);
@@ -84,7 +108,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
         }
 
         // Handle direct stitch trigger for KS0012 Touch
-        const mappedType = Object.values(StitchType).find(t => t === cmd);
+        const mappedType = Object.values(StitchType).find((t) => t === cmd);
         if (mappedType) {
           addStitchToCurrentRow(mappedType as StitchType);
           setLastRemoteStitch(mappedType);
@@ -99,80 +123,106 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
     const lastRowIndex = pattern.rows.length - 1;
     const lastRow = pattern.rows[lastRowIndex];
     if (lastRow.stitches.length === 0) {
-      setPattern(prev => ({ ...prev, rows: prev.rows.slice(0, -1) }));
+      setPattern((prev) => ({ ...prev, rows: prev.rows.slice(0, -1) }));
       return;
     }
     const newRows = [...pattern.rows];
-    newRows[lastRowIndex] = { ...lastRow, stitches: lastRow.stitches.slice(0, -1) };
-    setPattern(prev => ({ ...prev, rows: newRows }));
+    newRows[lastRowIndex] = {
+      ...lastRow,
+      stitches: lastRow.stitches.slice(0, -1),
+    };
+    setPattern((prev) => ({ ...prev, rows: newRows }));
   };
 
   // Export functions
   const handleExport3D = () => {
     if (!canvasRef?.current) {
-      alert('Canvas 3D não está disponível');
+      alert("Canvas 3D não está disponível");
       return;
     }
     const canvas = canvasRef.current.getCanvasElement();
     if (canvas) {
-      exportService.exportCanvasAsPNG(canvas, `padrão-3d-${new Date().toISOString().split('T')[0]}.png`);
+      exportService.exportCanvasAsPNG(
+        canvas,
+        `padrão-3d-${new Date().toISOString().split("T")[0]}.png`
+      );
       soundService.playConnect();
     }
   };
 
   const handleExport2D = () => {
     if (!pattern2DRef?.current) {
-      alert('Padrão 2D não está disponível');
+      alert("Padrão 2D não está disponível");
       return;
     }
     const svg = pattern2DRef.current.getSVGElement();
     if (svg) {
-      exportService.export2DAsPNG(svg, `padrão-2d-${new Date().toISOString().split('T')[0]}.png`);
+      exportService.export2DAsPNG(
+        svg,
+        `padrão-2d-${new Date().toISOString().split("T")[0]}.png`
+      );
       soundService.playConnect();
     }
   };
 
   const handleExport2DSVG = () => {
     if (!pattern2DRef?.current) {
-      alert('Padrão 2D não está disponível');
+      alert("Padrão 2D não está disponível");
       return;
     }
     const svg = pattern2DRef.current.getSVGElement();
     if (svg) {
-      exportService.export2DAsSVG(svg, `padrão-2d-${new Date().toISOString().split('T')[0]}.svg`);
+      exportService.export2DAsSVG(
+        svg,
+        `padrão-2d-${new Date().toISOString().split("T")[0]}.svg`
+      );
       soundService.playConnect();
     }
   };
 
   const handleExportJSON = () => {
-    exportService.exportPatternAsJSON(pattern, `padrão-${new Date().toISOString().split('T')[0]}.json`);
+    exportService.exportPatternAsJSON(
+      pattern,
+      `padrão-${new Date().toISOString().split("T")[0]}.json`
+    );
     soundService.playConnect();
   };
 
   const handleExportCSV = () => {
-    exportService.exportPatternAsCSV(pattern, `padrão-${new Date().toISOString().split('T')[0]}.csv`);
+    exportService.exportPatternAsCSV(
+      pattern,
+      `padrão-${new Date().toISOString().split("T")[0]}.csv`
+    );
     soundService.playConnect();
   };
 
   const handleExportPDF = async () => {
     if (!pattern2DRef?.current) {
-      alert('Padrão 2D não está disponível');
+      alert("Padrão 2D não está disponível");
       return;
     }
     const svg = pattern2DRef.current.getSVGElement();
     if (svg) {
-      await exportService.exportPatternAsPDF(svg, `padrão-${new Date().toISOString().split('T')[0]}.pdf`);
+      await exportService.exportPatternAsPDF(
+        svg,
+        `padrão-${new Date().toISOString().split("T")[0]}.pdf`
+      );
       soundService.playConnect();
     }
   };
 
   return (
-    <div 
+    <div
       className="flex flex-col h-full bg-white border-r border-gray-200 overflow-y-auto p-4 space-y-6 shadow-xl"
-      style={{
-        scrollbarWidth: 'thin',
-        scrollbarColor: '#818cf8 #f1f5f9'
-      } as React.CSSProperties & { scrollbarWidth?: string; scrollbarColor?: string }}
+      style={
+        {
+          scrollbarWidth: "thin",
+          scrollbarColor: "#818cf8 #f1f5f9",
+        } as React.CSSProperties & {
+          scrollbarWidth?: string;
+          scrollbarColor?: string;
+        }
+      }
     >
       <style>{`
         .flex.flex-col.h-full::-webkit-scrollbar {
@@ -192,7 +242,9 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
         }
       `}</style>
       <div>
-        <h1 className="text-2xl font-bold text-indigo-800 mb-1">Crochet Híbrido</h1>
+        <h1 className="text-2xl font-bold text-indigo-800 mb-1">
+          Crochet Híbrido
+        </h1>
       </div>
 
       {/* Advanced Sensor Hook Connection */}
@@ -200,51 +252,96 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-4">
             <div className="flex flex-col">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-300">Modo de Sensores Avançado</h3>
-              <span className="text-[9px] text-slate-500 font-bold">ADXL345 (Movimento) + Sensor de Toque</span>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-300">
+                Modo de Sensores Avançado
+              </h3>
+              <span className="text-[9px] text-slate-500 font-bold">
+                ADXL345 (Movimento) + Sensor de Toque
+              </span>
             </div>
-            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)] animate-pulse' : 'bg-slate-700'}`} />
-          </div>
-          
-          <div className="space-y-3 mb-4">
-             <div className="flex items-center justify-between text-[10px] bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                <span className="text-slate-400">Seletor (Pot)</span>
-                <span className={`font-mono ${sensorPreview ? 'text-amber-400' : 'text-slate-600'}`}>
-                  {sensorPreview?.toUpperCase() || '---'}
-                </span>
-             </div>
-             <div className="flex items-center justify-between text-[10px] bg-slate-800/50 p-2 rounded-lg border border-slate-700">
-                <span className="text-slate-400">Ação (Toque)</span>
-                <span className={`font-mono ${lastRemoteStitch ? 'text-green-400' : 'text-slate-600'}`}>
-                  {lastRemoteStitch ? 'ACIONADO!' : 'A AGUARDAR...'}
-                </span>
-             </div>
+            <div
+              className={`w-3 h-3 rounded-full ${
+                isConnected
+                  ? "bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)] animate-pulse"
+                  : "bg-slate-700"
+              }`}
+            />
           </div>
 
-          <button 
+          <div className="space-y-3 mb-4">
+            <div className="flex items-center justify-between text-[10px] bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+              <span className="text-slate-400">Seletor (Pot)</span>
+              <span
+                className={`font-mono ${
+                  sensorPreview ? "text-amber-400" : "text-slate-600"
+                }`}
+              >
+                {sensorPreview?.toUpperCase() || "---"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-[10px] bg-slate-800/50 p-2 rounded-lg border border-slate-700">
+              <span className="text-slate-400">Ação (Toque)</span>
+              <span
+                className={`font-mono ${
+                  lastRemoteStitch ? "text-green-400" : "text-slate-600"
+                }`}
+              >
+                {lastRemoteStitch ? "ACIONADO!" : "A AGUARDAR..."}
+              </span>
+            </div>
+          </div>
+
+          <button
             onClick={handleConnect}
-            className={`w-full py-2.5 rounded-xl text-xs font-black transition-all border shadow-lg ${isConnected ? 'bg-rose-500/10 border-rose-500/50 text-rose-400 hover:bg-rose-500/20' : 'bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-500 hover:-translate-y-0.5'}`}
+            className={`w-full py-2.5 rounded-xl text-xs font-black transition-all border shadow-lg ${
+              isConnected
+                ? "bg-rose-500/10 border-rose-500/50 text-rose-400 hover:bg-rose-500/20"
+                : "bg-indigo-600 border-indigo-500 text-white hover:bg-indigo-500 hover:-translate-y-0.5"
+            }`}
           >
-            {isConnected ? 'Parar Sincronização' : 'Iniciar Ligação aos Sensores'}
+            {isConnected
+              ? "Parar Sincronização"
+              : "Iniciar Ligação aos Sensores"}
           </button>
         </div>
-        
+
         {/* Animated grid background for sensor panel */}
-        <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
+        <div
+          className="absolute inset-0 opacity-5 pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, white 1px, transparent 1px)",
+            backgroundSize: "10px 10px",
+          }}
+        />
       </section>
 
       <section>
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Construção</h3>
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">
+          Construção
+        </h3>
         <div className="flex bg-gray-100 rounded-lg p-1">
           <button
-            onClick={() => setPattern(p => ({ ...p, mode: ConstructionMode.FLAT }))}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${pattern.mode === ConstructionMode.FLAT ? 'bg-white shadow text-indigo-600' : 'text-gray-500'}`}
+            onClick={() =>
+              setPattern((p) => ({ ...p, mode: ConstructionMode.FLAT }))
+            }
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              pattern.mode === ConstructionMode.FLAT
+                ? "bg-white shadow text-indigo-600"
+                : "text-gray-500"
+            }`}
           >
             Carreiras Planas
           </button>
           <button
-            onClick={() => setPattern(p => ({ ...p, mode: ConstructionMode.ROUND }))}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${pattern.mode === ConstructionMode.ROUND ? 'bg-white shadow text-indigo-600' : 'text-gray-500'}`}
+            onClick={() =>
+              setPattern((p) => ({ ...p, mode: ConstructionMode.ROUND }))
+            }
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+              pattern.mode === ConstructionMode.ROUND
+                ? "bg-white shadow text-indigo-600"
+                : "text-gray-500"
+            }`}
           >
             Em Círculo
           </button>
@@ -252,13 +349,19 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
       </section>
 
       <section>
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Biblioteca de Pontos</h3>
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">
+          Biblioteca de Pontos
+        </h3>
         <div className="grid grid-cols-2 gap-2">
           {Object.values(StitchType).map((type) => (
             <button
               key={type}
               onClick={() => setSelectedStitch(type)}
-              className={`p-2 text-xs border rounded-lg flex flex-col items-center justify-center transition-all ${selectedStitch === type ? 'border-indigo-500 bg-indigo-50 text-indigo-700 scale-[1.02] shadow-sm' : 'border-gray-200 hover:border-indigo-300'}`}
+              className={`p-2 text-xs border rounded-lg flex flex-col items-center justify-center transition-all ${
+                selectedStitch === type
+                  ? "border-indigo-500 bg-indigo-50 text-indigo-700 scale-[1.02] shadow-sm"
+                  : "border-gray-200 hover:border-indigo-300"
+              }`}
             >
               <span className="font-bold uppercase">{type}</span>
               {/* <span className="text-[10px] text-gray-400 capitalize">{type === 'inc' ? 'Aumento' : type === 'dec' ? 'Diminuição' : 'Básico'}</span> */}
@@ -271,21 +374,24 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Controlo Manual</h3>
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">
+          Controlo Manual
+        </h3>
+
         <button
-          onClick={() => addStitchToCurrentRow()}
+          onClick={addRow}
           className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg transition-all font-bold text-sm active:scale-95"
         >
-          Adicionar {selectedStitch.toUpperCase()} manualmente
+          Nova Carreira
         </button>
-        
         <div className="flex gap-2">
           <button
-            onClick={addRow}
+            onClick={() => addStitchToCurrentRow()}
             className="flex-1 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold border border-gray-200 transition-colors"
           >
-            Nova Carreira
+            Adicionar {selectedStitch.toUpperCase()} manualmente
           </button>
+
           <button
             onClick={removeLastStitch}
             className="flex-1 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg text-xs font-semibold border border-red-100 transition-colors"
@@ -297,21 +403,33 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
 
       {/* Export Section */}
       <section className="space-y-3 border-t pt-4">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Exportar Padrão</h3>
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+          Exportar Padrão
+        </h3>
         <div className="relative">
           <button
             onClick={() => setShowExportMenu(!showExportMenu)}
             className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold border border-emerald-500 transition-all flex items-center justify-between px-3"
           >
-            <span className="flex items-center gap-2"><Download size={16} /> Exportar</span>
-            <span className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`}><ChevronDown size={16} /></span>
+            <span className="flex items-center gap-2">
+              <Download size={16} /> Exportar
+            </span>
+            <span
+              className={`transition-transform ${
+                showExportMenu ? "rotate-180" : ""
+              }`}
+            >
+              <ChevronDown size={16} />
+            </span>
           </button>
-          
+
           {showExportMenu && (
             <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
               {/* Canvas 3D Exports */}
               <div className="border-b border-gray-100 px-1 py-1">
-                <p className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">Canvas 3D</p>
+                <p className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">
+                  Canvas 3D
+                </p>
                 <button
                   onClick={() => {
                     handleExport3D();
@@ -325,7 +443,9 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
 
               {/* Pattern 2D Exports */}
               <div className="border-b border-gray-100 px-1 py-1">
-                <p className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">Padrão 2D</p>
+                <p className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">
+                  Padrão 2D
+                </p>
                 <button
                   onClick={() => {
                     handleExport2D();
@@ -348,7 +468,9 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
 
               {/* Data Exports */}
               <div className="border-b border-gray-100 px-1 py-1">
-                <p className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">Dados</p>
+                <p className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">
+                  Dados
+                </p>
                 <button
                   onClick={() => {
                     handleExportJSON();
@@ -381,8 +503,6 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
           )}
         </div>
       </section>
-
-      {/* AI assistant controls removed */}
     </div>
   );
 };
