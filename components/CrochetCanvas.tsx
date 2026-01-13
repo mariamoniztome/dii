@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Pattern, ConstructionMode, StitchType } from '../types';
 import { STITCH_HEIGHTS } from '../constants.tsx';
 
@@ -53,9 +54,21 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
     scene.add(group);
     groupRef.current = group;
 
+    // Add OrbitControls for rotation and zoom
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = false;
+    controls.enableZoom = true;
+    controls.enablePan = false;
+    controls.minDistance = 5;
+    controls.maxDistance = 50;
+    controls.target.set(0, 0, 0);
+    controls.update();
+
     const animate = () => {
       requestAnimationFrame(animate);
-      group.rotation.y += 0.002;
+      controls.update();
       renderer.render(scene, camera);
     };
     animate();
