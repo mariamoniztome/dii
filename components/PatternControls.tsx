@@ -6,7 +6,7 @@ import {
   ConstructionMode,
   StitchInstance,
 } from "../types";
-import { STITCH_DESCRIPTIONS, STITCH_COLORS } from "../constants.tsx";
+import { STITCH_DESCRIPTIONS, STITCH_TYPE_COLORS } from "../constants.tsx";
 import { serialService } from "../services/serialService";
 import { soundService } from "../services/soundService";
 import { exportService } from "../services/exportService";
@@ -68,10 +68,11 @@ const PatternControls: React.FC<PatternControlsProps> = ({
       }
 
       const lastRowIndex = rows.length - 1;
+      
       const newStitch: StitchInstance = {
         id: Math.random().toString(36).substr(2, 9),
         type: type,
-        color: STITCH_COLORS[lastRowIndex % STITCH_COLORS.length],
+        color: STITCH_TYPE_COLORS[type],
       };
 
       rows[lastRowIndex] = {

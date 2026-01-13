@@ -10,6 +10,16 @@ export const STITCH_COLORS = [
   '#ccccff', // Lavender
 ];
 
+export const STITCH_TYPE_COLORS: Record<string, string> = {
+  sc: '#ff9999',   // Coral
+  dc: '#99ccff',   // Sky Blue
+  hdc: '#ccff99',  // Mint
+  tr: '#ffcc99',   // Peach
+  inc: '#ff99cc',  // Pink
+  dec: '#99ffcc',  // Seafoam
+  slst: '#ccccff'  // Lavender
+};
+
 export const STITCH_HEIGHTS: Record<string, number> = {
   sc: 0.6,
   dc: 1.4,
