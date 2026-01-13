@@ -16,7 +16,7 @@ const ViewControls: React.FC<ViewControlsProps> = ({
   showPercentage = true 
 }) => {
   return (
-    <div className="absolute bottom-4 right-4 flex flex-col gap-2 pointer-events-auto z-50">
+    <div className="absolute bottom-4 right-4 flex flex-col gap-2 pointer-events-auto z-4 0">
       <div className="bg-white/80 backdrop-blur-md border border-gray-200 rounded-lg shadow-lg flex flex-col overflow-hidden">
         <button 
           onClick={onZoomIn}
