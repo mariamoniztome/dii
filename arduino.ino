@@ -2,6 +2,8 @@
 // #include <Adafruit_Sensor.h>
 // #include <Adafruit_ADXL345_U.h>
 
+// const int PIN_TOQUE = 2;
+
 // Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 
 // float START_THRESHOLD = 10.3;
@@ -9,6 +11,10 @@
 
 // bool inMotion = false;
 // unsigned long motionStart = 0;
+
+// bool lastTouchState = HIGH;
+// unsigned long lastTouchTime = 0;
+// unsigned long TOUCH_COOLDOWN = 400;
 
 // float motionMagnitude(float x, float y, float z) {
 //   return sqrt(x * x + y * y + z * z);
@@ -24,11 +30,15 @@
 // void setup() {
 //   Serial.begin(9600);
 //   Wire.begin();
+
+//   pinMode(PIN_TOQUE, INPUT_PULLUP);
+
 //   accel.begin();
 //   accel.setRange(ADXL345_RANGE_4_G);
 // }
 
 // void loop() {
+//   // ----------- ACELERÓMETRO -----------
 //   sensors_event_t event;
 //   accel.getEvent(&event);
 
@@ -54,6 +64,20 @@
 //     Serial.println(classifyStitch(duration));
 //     inMotion = false;
 //   }
+
+//   // ----------- SENSOR DE TOQUE -----------
+//   bool touchState = digitalRead(PIN_TOQUE);
+
+//   if (
+//     lastTouchState == HIGH &&
+//     touchState == LOW &&
+//     millis() - lastTouchTime > TOUCH_COOLDOWN
+//   ) {
+//     Serial.println("row");  
+//     lastTouchTime = millis();
+//   }
+
+//   lastTouchState = touchState;
 
 //   delay(20);
 // }

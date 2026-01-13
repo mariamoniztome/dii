@@ -68,7 +68,7 @@ const PatternControls: React.FC<PatternControlsProps> = ({
       }
 
       const lastRowIndex = rows.length - 1;
-      
+
       const newStitch: StitchInstance = {
         id: Math.random().toString(36).substr(2, 9),
         type: type,
@@ -110,9 +110,9 @@ const PatternControls: React.FC<PatternControlsProps> = ({
         }
 
         if (cmd === "row") {
-  addRow();
-  return;
-}
+          addRow();
+          return;
+        }
         // Handle direct stitch trigger for KS0012 Touch
         const mappedType = Object.values(StitchType).find((t) => t === cmd);
         if (mappedType) {
@@ -139,8 +139,6 @@ const PatternControls: React.FC<PatternControlsProps> = ({
     };
     setPattern((prev) => ({ ...prev, rows: newRows }));
   };
-
-
 
   return (
     <div
