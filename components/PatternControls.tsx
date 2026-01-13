@@ -167,13 +167,36 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, 
   };
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200 overflow-y-auto p-4 space-y-6 shadow-xl">
+    <div 
+      className="flex flex-col h-full bg-white border-r border-gray-200 overflow-y-auto p-4 space-y-6 shadow-xl"
+      style={{
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#818cf8 #f1f5f9'
+      } as React.CSSProperties & { scrollbarWidth?: string; scrollbarColor?: string }}
+    >
+      <style>{`
+        .flex.flex-col.h-full::-webkit-scrollbar {
+          width: 8px;
+        }
+        .flex.flex-col.h-full::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        .flex.flex-col.h-full::-webkit-scrollbar-thumb {
+          background: linear-gradient(180deg, #818cf8 0%, #6366f1 100%);
+          border-radius: 10px;
+          border: 2px solid #f1f5f9;
+        }
+        .flex.flex-col.h-full::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+        }
+      `}</style>
       <div>
         <h1 className="text-2xl font-bold text-indigo-800 mb-1">Crochet Híbrido</h1>
       </div>
 
       {/* Advanced Sensor Hook Connection */}
-      <section className="bg-slate-900 rounded-2xl p-4 text-white min-h-32 shadow-2xl relative overflow-hidden border border-slate-700">
+      <section className="bg-slate-900 rounded-2xl p-4 text-white min-h-52 shadow-2xl relative overflow-hidden border border-slate-700">
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-4">
             <div className="flex flex-col">
