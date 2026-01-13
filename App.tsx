@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
-import CrochetCanvas from './components/CrochetCanvas';
-import Pattern2D from './components/Pattern2D';
+import React, { useState, useEffect, useRef } from 'react';
+import CrochetCanvas, { CrochetCanvasRef } from './components/CrochetCanvas';
+import Pattern2D, { Pattern2DRef } from './components/Pattern2D';
 import PatternControls from './components/PatternControls';
 import { Pattern, ConstructionMode } from './types';
 
@@ -13,6 +13,10 @@ const App: React.FC = () => {
   });
 
   const [activeView, setActiveView] = useState<'3d' | '2d'>('3d');
+  
+  // Create refs for canvas components
+  const canvasRef = useRef<CrochetCanvasRef>(null);
+  const pattern2DRef = useRef<Pattern2DRef>(null);
 
   const totalStitches = pattern.rows.reduce((sum, row) => sum + row.stitches.length, 0);
 
@@ -31,7 +35,12 @@ const App: React.FC = () => {
     <div className="flex h-screen w-screen overflow-hidden font-sans text-gray-900">
       {/* Sidebar - Controls */}
       <aside className="w-80 flex-shrink-0 z-20 shadow-2xl relative">
-        <PatternControls pattern={pattern} setPattern={setPattern} />
+        <PatternControls 
+          pattern={pattern} 
+          setPattern={setPattern}
+          canvasRef={canvasRef}
+          pattern2DRef={pattern2DRef}
+        />
       </aside>
 
       {/* Main Viewport */}
@@ -63,6 +72,7 @@ const App: React.FC = () => {
             <div className="relative h-full w-full">
               <div className="absolute top-4 left-4 z-10 bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">Render 3D</div>
               <CrochetCanvas
+                ref={canvasRef}
                 key={`${pattern.mode}-${pattern.rows.length}-${pattern.rows.map(r => r.stitches.length).join('-')}`}
                 pattern={pattern}
               />
@@ -72,7 +82,11 @@ const App: React.FC = () => {
           {activeView === '2d' && (
             <div className="relative h-full w-full">
               <div className="absolute top-4 left-4 z-10 bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter">Mapa de Padrão 2D</div>
-              <Pattern2D pattern={pattern} setPattern={setPattern} />
+              <Pattern2D 
+                ref={pattern2DRef}
+                pattern={pattern} 
+                setPattern={setPattern} 
+              />
             </div>
           )}
         </div>

@@ -1,17 +1,24 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Pattern, Row, StitchType, ConstructionMode, StitchInstance } from '../types';
 import { STITCH_DESCRIPTIONS, STITCH_COLORS } from '../constants.tsx';
 import { serialService } from '../services/serialService';
 import { soundService } from '../services/soundService';
+import { exportService } from '../services/exportService';
+import { CrochetCanvasRef } from './CrochetCanvas';
+import { Pattern2DRef } from './Pattern2D';
+import { Download, Camera, FileJson, BarChart3, File, ChevronDown, Plus, Trash2 } from 'lucide-react';
 
 interface PatternControlsProps {
   pattern: Pattern;
   setPattern: React.Dispatch<React.SetStateAction<Pattern>>;
+  canvasRef?: React.RefObject<CrochetCanvasRef>;
+  pattern2DRef?: React.RefObject<Pattern2DRef>;
 }
 
-const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }) => {
+const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern, canvasRef, pattern2DRef }) => {
   const [selectedStitch, setSelectedStitch] = useState<StitchType>(StitchType.SC);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   
   // Hardware State
   const [isConnected, setIsConnected] = useState(false);
@@ -100,7 +107,64 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
     setPattern(prev => ({ ...prev, rows: newRows }));
   };
 
-  // AI feature removed per user request
+  // Export functions
+  const handleExport3D = () => {
+    if (!canvasRef?.current) {
+      alert('Canvas 3D não está disponível');
+      return;
+    }
+    const canvas = canvasRef.current.getCanvasElement();
+    if (canvas) {
+      exportService.exportCanvasAsPNG(canvas, `padrão-3d-${new Date().toISOString().split('T')[0]}.png`);
+      soundService.playConnect();
+    }
+  };
+
+  const handleExport2D = () => {
+    if (!pattern2DRef?.current) {
+      alert('Padrão 2D não está disponível');
+      return;
+    }
+    const svg = pattern2DRef.current.getSVGElement();
+    if (svg) {
+      exportService.export2DAsPNG(svg, `padrão-2d-${new Date().toISOString().split('T')[0]}.png`);
+      soundService.playConnect();
+    }
+  };
+
+  const handleExport2DSVG = () => {
+    if (!pattern2DRef?.current) {
+      alert('Padrão 2D não está disponível');
+      return;
+    }
+    const svg = pattern2DRef.current.getSVGElement();
+    if (svg) {
+      exportService.export2DAsSVG(svg, `padrão-2d-${new Date().toISOString().split('T')[0]}.svg`);
+      soundService.playConnect();
+    }
+  };
+
+  const handleExportJSON = () => {
+    exportService.exportPatternAsJSON(pattern, `padrão-${new Date().toISOString().split('T')[0]}.json`);
+    soundService.playConnect();
+  };
+
+  const handleExportCSV = () => {
+    exportService.exportPatternAsCSV(pattern, `padrão-${new Date().toISOString().split('T')[0]}.csv`);
+    soundService.playConnect();
+  };
+
+  const handleExportPDF = async () => {
+    if (!pattern2DRef?.current) {
+      alert('Padrão 2D não está disponível');
+      return;
+    }
+    const svg = pattern2DRef.current.getSVGElement();
+    if (svg) {
+      await exportService.exportPatternAsPDF(svg, `padrão-${new Date().toISOString().split('T')[0]}.pdf`);
+      soundService.playConnect();
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-white border-r border-gray-200 overflow-y-auto p-4 space-y-6 shadow-xl">
@@ -205,6 +269,93 @@ const PatternControls: React.FC<PatternControlsProps> = ({ pattern, setPattern }
           >
             Desfazer Último
           </button>
+        </div>
+      </section>
+
+      {/* Export Section */}
+      <section className="space-y-3 border-t pt-4">
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">Exportar Padrão</h3>
+        <div className="relative">
+          <button
+            onClick={() => setShowExportMenu(!showExportMenu)}
+            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold border border-emerald-500 transition-all flex items-center justify-between px-3"
+          >
+            <span className="flex items-center gap-2"><Download size={16} /> Exportar</span>
+            <span className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`}><ChevronDown size={16} /></span>
+          </button>
+          
+          {showExportMenu && (
+            <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
+              {/* Canvas 3D Exports */}
+              <div className="border-b border-gray-100 px-1 py-1">
+                <p className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">Canvas 3D</p>
+                <button
+                  onClick={() => {
+                    handleExport3D();
+                    setShowExportMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-blue-50 text-blue-600 text-sm font-medium rounded transition-colors flex items-center gap-2"
+                >
+                  <Camera size={16} /> Exportar como PNG
+                </button>
+              </div>
+
+              {/* Pattern 2D Exports */}
+              <div className="border-b border-gray-100 px-1 py-1">
+                <p className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">Padrão 2D</p>
+                <button
+                  onClick={() => {
+                    handleExport2D();
+                    setShowExportMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-purple-50 text-purple-600 text-sm font-medium rounded transition-colors flex items-center gap-2"
+                >
+                  <FileJson size={16} /> Exportar como PNG
+                </button>
+                <button
+                  onClick={() => {
+                    handleExport2DSVG();
+                    setShowExportMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-purple-50 text-purple-600 text-sm font-medium rounded transition-colors flex items-center gap-2"
+                >
+                  <FileJson size={16} /> Exportar como SVG
+                </button>
+              </div>
+
+              {/* Data Exports */}
+              <div className="border-b border-gray-100 px-1 py-1">
+                <p className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">Dados</p>
+                <button
+                  onClick={() => {
+                    handleExportJSON();
+                    setShowExportMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-orange-50 text-orange-600 text-sm font-medium rounded transition-colors flex items-center gap-2"
+                >
+                  <FileJson size={16} /> JSON
+                </button>
+                <button
+                  onClick={() => {
+                    handleExportCSV();
+                    setShowExportMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-orange-50 text-orange-600 text-sm font-medium rounded transition-colors flex items-center gap-2"
+                >
+                  <BarChart3 size={16} /> CSV (Spreadsheet)
+                </button>
+                <button
+                  onClick={() => {
+                    handleExportPDF();
+                    setShowExportMenu(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-orange-50 text-orange-600 text-sm font-medium rounded transition-colors flex items-center gap-2"
+                >
+                  <File size={16} /> PDF
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

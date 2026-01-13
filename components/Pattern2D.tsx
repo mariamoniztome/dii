@@ -1,10 +1,14 @@
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Pattern, ConstructionMode, StitchType } from '../types';
 
 interface Pattern2DProps {
   pattern: Pattern;
   setPattern: React.Dispatch<React.SetStateAction<Pattern>>;
+}
+
+export interface Pattern2DRef {
+  getSVGElement: () => SVGSVGElement | null;
 }
 
 const STITCH_SYMBOLS: Record<StitchType, string> = {
@@ -14,8 +18,13 @@ const STITCH_SYMBOLS: Record<StitchType, string> = {
   [StitchType.TR]: '‡',
 };
 
-const Pattern2D: React.FC<Pattern2DProps> = ({ pattern, setPattern }) => {
+const Pattern2D: React.FC<Pattern2DProps> = forwardRef<Pattern2DRef, Pattern2DProps>(({ pattern, setPattern }, ref) => {
   const isRound = pattern.mode === ConstructionMode.ROUND;
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    getSVGElement: () => svgRef.current || null
+  }));
 
   useEffect(() => {
     const totalStitches = pattern.rows.reduce((sum, row) => sum + row.stitches.length, 0);
@@ -67,7 +76,7 @@ const Pattern2D: React.FC<Pattern2DProps> = ({ pattern, setPattern }) => {
     const height = Math.max(200, pattern.rows.length * cellSize + padding * 2);
 
     return (
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <svg ref={svgRef} width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
         {pattern.rows.map((row, rowIndex) => (
           <g key={row.id} transform={`translate(${padding}, ${height - padding - (rowIndex + 1) * cellSize})`}>
             {row.stitches.map((stitch, stIndex) => {
@@ -109,7 +118,7 @@ const Pattern2D: React.FC<Pattern2DProps> = ({ pattern, setPattern }) => {
     const step = 40;
 
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+      <svg ref={svgRef} width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
         {pattern.rows.map((row, rowIndex) => {
           const radius = (rowIndex + 1) * step + 20;
           const stitchCount = row.stitches.length;
@@ -211,6 +220,7 @@ const Pattern2D: React.FC<Pattern2DProps> = ({ pattern, setPattern }) => {
       </div>
     </div>
   );
-};
+});
 
 export default Pattern2D;
+

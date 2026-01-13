@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import * as THREE from 'three';
 import { Pattern, ConstructionMode, StitchType } from '../types';
 import { STITCH_HEIGHTS } from '../constants.tsx';
@@ -7,11 +7,21 @@ interface CrochetCanvasProps {
   pattern: Pattern;
 }
 
-const CrochetCanvas: React.FC<CrochetCanvasProps> = ({ pattern }) => {
+export interface CrochetCanvasRef {
+  getCanvasElement: () => HTMLCanvasElement | null;
+}
+
+const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef, CrochetCanvasProps>(({ pattern }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const groupRef = useRef<THREE.Group | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    getCanvasElement: () => {
+      return rendererRef.current?.domElement || null;
+    }
+  }));
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -175,6 +185,6 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = ({ pattern }) => {
   };
 
   return <div ref={containerRef} className="w-full h-full cursor-move" />;
-};
+});
 
 export default CrochetCanvas;
