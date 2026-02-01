@@ -4,6 +4,7 @@ import Pattern2D, { Pattern2DRef } from "./components/Pattern2D";
 import PatternControls from "./components/PatternControls";
 import { Pattern, ConstructionMode } from "./types";
 import ExportDropdown from "./components/ExportDropdown";
+import LoadingScreen from "./components/LoadingScreen";
 import { exportService } from "./services/exportService";
 import { soundService } from "./services/soundService";
 
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   });
 
   const [activeView, setActiveView] = useState<"3d" | "2d">("3d");
+  const [isLoading, setIsLoading] = useState(true);
 
   // Create refs for canvas components
   const canvasRef = useRef<CrochetCanvasRef>(null);
@@ -30,6 +32,11 @@ const App: React.FC = () => {
     if (activeView !== "3d") {
       setActiveView("3d");
     }
+    // Simulate app initialization and hide loading screen after 1.5 seconds
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -115,6 +122,7 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden font-sans text-gray-900">
+      <LoadingScreen isVisible={isLoading} />
       {/* Sidebar - Controls */}
       <aside className="w-80 flex-shrink-0 z-20 shadow-2xl relative">
         <PatternControls
