@@ -6,19 +6,30 @@
 
 // Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 
-// float START_THRESHOLD = 10.3;
-// float STOP_THRESHOLD  = 10.0;
+// // ---- Thresholds (meio termo) ----
+// float START_THRESHOLD = 6.2;
+// float STOP_THRESHOLD  = 4.8;
 
+// // ---- Filtro ----
+// float filteredX = 0;
+// float alpha = 0.32;
+
+// // ---- Estados ----
 // bool inMotion = false;
 // unsigned long motionStart = 0;
 
+// // ---- Estabilidade ----
+// unsigned long stableStartTime = 0;
+// unsigned long MIN_MOTION_TIME = 90;
+
+// // ---- Cooldown entre pontos ----
+// unsigned long lastStitchTime = 0;
+// unsigned long STITCH_COOLDOWN = 300;
+
+// // ---- Toque ----
 // bool lastTouchState = HIGH;
 // unsigned long lastTouchTime = 0;
 // unsigned long TOUCH_COOLDOWN = 400;
-
-// float motionMagnitude(float x, float y, float z) {
-//   return sqrt(x * x + y * y + z * z);
-// }
 
 // String classifyStitch(unsigned long duration) {
 //   if (duration < 200) return "sc";
@@ -38,34 +49,52 @@
 // }
 
 // void loop() {
+
 //   // ----------- ACELERÓMETRO -----------
 //   sensors_event_t event;
 //   accel.getEvent(&event);
 
-//   float mag = motionMagnitude(
-//     event.acceleration.x,
-//     event.acceleration.y,
-//     event.acceleration.z
-//   );
+//   float rawX = event.acceleration.x;
 
-//   if (!inMotion && mag > START_THRESHOLD) {
-//     inMotion = true;
-//     motionStart = millis();
+//   filteredX = alpha * rawX + (1 - alpha) * filteredX;
+//   float absX = abs(filteredX);
+
+//   // ---- DETEÇÃO DE INÍCIO ----
+//   if (!inMotion && absX > START_THRESHOLD) {
+
+//     if (stableStartTime == 0)
+//       stableStartTime = millis();
+
+//     if (millis() - stableStartTime > MIN_MOTION_TIME) {
+//       inMotion = true;
+//       motionStart = millis();
+//     }
+
+//   } else {
+//     stableStartTime = 0;
 //   }
 
+//   // ---- PREVIEW ----
 //   if (inMotion) {
 //     unsigned long elapsed = millis() - motionStart;
 //     Serial.print("preview:");
 //     Serial.println(classifyStitch(elapsed));
 //   }
 
-//   if (inMotion && mag < STOP_THRESHOLD) {
+//   // ---- DETEÇÃO DE FIM ----
+//   if (inMotion && absX < STOP_THRESHOLD) {
+
 //     unsigned long duration = millis() - motionStart;
-//     Serial.println(classifyStitch(duration));
+
+//     if (millis() - lastStitchTime > STITCH_COOLDOWN) {
+//       Serial.println(classifyStitch(duration));
+//       lastStitchTime = millis();
+//     }
+
 //     inMotion = false;
 //   }
 
-//   // ----------- SENSOR DE TOQUE -----------
+//   // ----------- TOQUE -----------
 //   bool touchState = digitalRead(PIN_TOQUE);
 
 //   if (
@@ -73,11 +102,11 @@
 //     touchState == LOW &&
 //     millis() - lastTouchTime > TOUCH_COOLDOWN
 //   ) {
-//     Serial.println("row");  
+//     Serial.println("row");
 //     lastTouchTime = millis();
 //   }
 
 //   lastTouchState = touchState;
 
-//   delay(20);
+//   delay(15);
 // }
