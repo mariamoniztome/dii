@@ -94,7 +94,7 @@ const ColorPicker: React.FC<ColorPickerProps> = memo(({ pattern, onColorChange }
   if (pattern.rows.length === 0) return null;
 
   return (
-    <div className="absolute bottom-4 left-4 flex flex-col items-end gap-2 pointer-events-auto z-40">
+    <div className="absolute bottom-4 left-4 flex flex-col items-start gap-2 pointer-events-auto z-40">
       {/* Color Picker Panel */}
       {isOpen && (
         <div className="bg-white/95 backdrop-blur-md border border-gray-200 rounded-lg shadow-xl p-4 w-64 mb-2">
