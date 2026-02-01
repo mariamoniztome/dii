@@ -15,6 +15,8 @@ const App: React.FC = () => {
     rows: [],
   });
 
+  const [exportName, setExportName] = useState<string>("O Meu Projeto");
+
   const [activeView, setActiveView] = useState<"3d" | "2d">("3d");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,77 +46,94 @@ const App: React.FC = () => {
   }, [pattern, totalStitches]);
 
   // Export functions
-  const handleExport3D = () => {
+  const normalizeExportBaseName = (rawName: string, fallback: string) => {
+    const trimmed = rawName.trim();
+    const base = (trimmed || fallback || "padrao").trim();
+    const cleaned = base
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+      .replace(/\s+/g, " ")
+      .replace(/\.+$/g, "")
+      .trim();
+    return cleaned || "padrao";
+  };
+
+  const handleExport3D = (name: string) => {
     if (!canvasRef?.current) {
       alert("Canvas 3D não está disponível");
       return;
     }
     const canvas = canvasRef.current.getCanvasElement();
     if (canvas) {
+      const baseName = normalizeExportBaseName(name, pattern.name);
       exportService.exportCanvasAsPNG(
         canvas,
-        `padrão-3d-${new Date().toISOString().split("T")[0]}.png`
+        `${baseName}-3d.png`
       );
       soundService.playConnect();
     }
   };
 
-  const handleExport2D = () => {
+  const handleExport2D = (name: string) => {
     if (!pattern2DRef?.current) {
       alert("Padrão 2D não está disponível");
       return;
     }
     const svg = pattern2DRef.current.getSVGElement();
     if (svg) {
+      const baseName = normalizeExportBaseName(name, pattern.name);
       exportService.export2DAsPNG(
         svg,
-        `padrão-2d-${new Date().toISOString().split("T")[0]}.png`
+        `${baseName}-2d.png`
       );
       soundService.playConnect();
     }
   };
 
-  const handleExport2DSVG = () => {
+  const handleExport2DSVG = (name: string) => {
     if (!pattern2DRef?.current) {
       alert("Padrão 2D não está disponível");
       return;
     }
     const svg = pattern2DRef.current.getSVGElement();
     if (svg) {
+      const baseName = normalizeExportBaseName(name, pattern.name);
       exportService.export2DAsSVG(
         svg,
-        `padrão-2d-${new Date().toISOString().split("T")[0]}.svg`
+        `${baseName}-2d.svg`
       );
       soundService.playConnect();
     }
   };
 
-  const handleExportJSON = () => {
+  const handleExportJSON = (name: string) => {
+    const baseName = normalizeExportBaseName(name, pattern.name);
     exportService.exportPatternAsJSON(
       pattern,
-      `padrão-${new Date().toISOString().split("T")[0]}.json`
+      `${baseName}.json`
     );
     soundService.playConnect();
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = (name: string) => {
+    const baseName = normalizeExportBaseName(name, pattern.name);
     exportService.exportPatternAsCSV(
       pattern,
-      `padrão-${new Date().toISOString().split("T")[0]}.csv`
+      `${baseName}.csv`
     );
     soundService.playConnect();
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = async (name: string) => {
     if (!pattern2DRef?.current) {
       alert("Padrão 2D não está disponível");
       return;
     }
     const svg = pattern2DRef.current.getSVGElement();
     if (svg) {
+      const baseName = normalizeExportBaseName(name, pattern.name);
       await exportService.exportPatternAsPDF(
         svg,
-        `padrão-${new Date().toISOString().split("T")[0]}.pdf`
+        `${baseName}.pdf`
       );
       soundService.playConnect();
     }
@@ -165,6 +184,8 @@ const App: React.FC = () => {
             </div>
           </div>
           <ExportDropdown
+            exportName={exportName}
+            onExportNameChange={setExportName}
             onExport3D={handleExport3D}
             onExport2D={handleExport2D}
             onExport2DSVG={handleExport2DSVG}
