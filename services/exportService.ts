@@ -104,28 +104,23 @@ export const exportService = {
    * Export pattern as PDF using html2pdf library
    */
   exportPatternAsPDF: async (svgElement: SVGSVGElement, patternName: string = 'crochet-pattern.pdf') => {
-    try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      
-      const element = document.createElement('div');
-      const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
-      element.appendChild(clonedSvg);
-      element.style.padding = '20px';
-      element.style.backgroundColor = 'white';
-      
-      const opt = {
-        margin: 10,
-        filename: patternName,
-        image: { type: 'png' as const, quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { orientation: 'portrait' as const, unit: 'mm' as const, format: 'a4' }
-      };
-      
-      html2pdf().set(opt).from(element).save();
-    } catch (error) {
-      console.error('PDF export error:', error);
-      alert('Erro ao exportar PDF. Certifica-te de que html2pdf.js está instalado.');
-    }
+    const html2pdf = (await import('html2pdf.js')).default;
+    
+    const element = document.createElement('div');
+    const clonedSvg = svgElement.cloneNode(true) as SVGSVGElement;
+    element.appendChild(clonedSvg);
+    element.style.padding = '20px';
+    element.style.backgroundColor = 'white';
+    
+    const opt = {
+      margin: 10,
+      filename: patternName,
+      image: { type: 'png' as const, quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { orientation: 'portrait' as const, unit: 'mm' as const, format: 'a4' }
+    };
+    
+    html2pdf().set(opt).from(element).save();
   },
 
   /**

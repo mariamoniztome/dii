@@ -5,8 +5,10 @@ import PatternControls from "./components/PatternControls";
 import { Pattern, ConstructionMode } from "./types";
 import ExportDropdown from "./components/ExportDropdown";
 import LoadingScreen from "./components/LoadingScreen";
+import Dialog from "./components/Dialog";
 import { exportService } from "./services/exportService";
 import { soundService } from "./services/soundService";
+import { Toaster } from 'sonner';
 
 const App: React.FC = () => {
   const [pattern, setPattern] = useState<Pattern>({
@@ -19,6 +21,27 @@ const App: React.FC = () => {
 
   const [activeView, setActiveView] = useState<"3d" | "2d">("3d");
   const [isLoading, setIsLoading] = useState(true);
+
+  // Dialog state
+  const [dialogState, setDialogState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: 'info' | 'success' | 'error' | 'warning';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    type: 'info',
+  });
+
+  const showDialog = (title: string, message: string, type: 'info' | 'success' | 'error' | 'warning' = 'info') => {
+    setDialogState({ isOpen: true, title, message, type });
+  };
+
+  const closeDialog = () => {
+    setDialogState(prev => ({ ...prev, isOpen: false }));
+  };
 
   // Create refs for canvas components
   const canvasRef = useRef<CrochetCanvasRef>(null);
@@ -59,7 +82,11 @@ const App: React.FC = () => {
 
   const handleExport3D = (name: string) => {
     if (!canvasRef?.current) {
-      alert("Canvas 3D não está disponível");
+      showDialog(
+        'Canvas 3D Indisponível',
+        'O canvas 3D não está disponível. Por favor, certifica-te de que estás na vista 3D.',
+        'error'
+      );
       return;
     }
     const canvas = canvasRef.current.getCanvasElement();
@@ -70,12 +97,21 @@ const App: React.FC = () => {
         `${baseName}-3d.png`
       );
       soundService.playConnect();
+      showDialog(
+        'Exportação Bem-sucedida',
+        `A imagem 3D foi exportada como "${baseName}-3d.png".`,
+        'success'
+      );
     }
   };
 
   const handleExport2D = (name: string) => {
     if (!pattern2DRef?.current) {
-      alert("Padrão 2D não está disponível");
+      showDialog(
+        'Padrão 2D Indisponível',
+        'O padrão 2D não está disponível. Por favor, muda para a vista 2D primeiro.',
+        'error'
+      );
       return;
     }
     const svg = pattern2DRef.current.getSVGElement();
@@ -86,12 +122,21 @@ const App: React.FC = () => {
         `${baseName}-2d.png`
       );
       soundService.playConnect();
+      showDialog(
+        'Exportação Bem-sucedida',
+        `O padrão 2D foi exportado como "${baseName}-2d.png".`,
+        'success'
+      );
     }
   };
 
   const handleExport2DSVG = (name: string) => {
     if (!pattern2DRef?.current) {
-      alert("Padrão 2D não está disponível");
+      showDialog(
+        'Padrão 2D Indisponível',
+        'O padrão 2D não está disponível. Por favor, muda para a vista 2D primeiro.',
+        'error'
+      );
       return;
     }
     const svg = pattern2DRef.current.getSVGElement();
@@ -102,6 +147,11 @@ const App: React.FC = () => {
         `${baseName}-2d.svg`
       );
       soundService.playConnect();
+      showDialog(
+        'Exportação Bem-sucedida',
+        `O padrão 2D foi exportado como "${baseName}-2d.svg" (formato vetor).`,
+        'success'
+      );
     }
   };
 
@@ -112,6 +162,11 @@ const App: React.FC = () => {
       `${baseName}.json`
     );
     soundService.playConnect();
+    showDialog(
+      'Exportação Bem-sucedida',
+      `Os dados do padrão foram exportados como "${baseName}.json".`,
+      'success'
+    );
   };
 
   const handleExportCSV = (name: string) => {
@@ -121,27 +176,50 @@ const App: React.FC = () => {
       `${baseName}.csv`
     );
     soundService.playConnect();
+    showDialog(
+      'Exportação Bem-sucedida',
+      `Os dados do padrão foram exportados como "${baseName}.csv" para uso em Excel ou Sheets.`,
+      'success'
+    );
   };
 
   const handleExportPDF = async (name: string) => {
     if (!pattern2DRef?.current) {
-      alert("Padrão 2D não está disponível");
+      showDialog(
+        'Padrão 2D Indisponível',
+        'O padrão 2D não está disponível. Por favor, muda para a vista 2D primeiro.',
+        'error'
+      );
       return;
     }
     const svg = pattern2DRef.current.getSVGElement();
     if (svg) {
       const baseName = normalizeExportBaseName(name, pattern.name);
-      await exportService.exportPatternAsPDF(
-        svg,
-        `${baseName}.pdf`
-      );
-      soundService.playConnect();
+      try {
+        await exportService.exportPatternAsPDF(
+          svg,
+          `${baseName}.pdf`
+        );
+        soundService.playConnect();
+        showDialog(
+          'Exportação Bem-sucedida',
+          `O padrão foi exportado como "${baseName}.pdf" pronto para imprimir.`,
+          'success'
+        );
+      } catch (error) {
+        showDialog(
+          'Erro na Exportação PDF',
+          'Ocorreu um erro ao exportar o PDF. Certifica-te de que a biblioteca html2pdf.js está instalada.',
+          'error'
+        );
+      }
     }
   };
 
   return (
     <div className="flex h-screen w-screen overflow-hidden font-sans text-gray-900">
       <LoadingScreen isVisible={isLoading} />
+      <Toaster position="top-right" richColors />
       {/* Sidebar - Controls */}
       <aside className="w-80 flex-shrink-0 z-20 shadow-2xl relative">
         <PatternControls
@@ -280,6 +358,15 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Dialog Component */}
+        <Dialog
+          isOpen={dialogState.isOpen}
+          onClose={closeDialog}
+          title={dialogState.title}
+          message={dialogState.message}
+          type={dialogState.type}
+        />
     </div>
   );
 };
