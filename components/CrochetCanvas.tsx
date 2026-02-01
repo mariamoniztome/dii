@@ -189,11 +189,15 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
       const stitchCount = row.stitches.length;
       if (stitchCount === 0) return;
 
+      // Calculate max stitch height in this row for proper vertical spacing
+      const maxStitchHeight = Math.max(...row.stitches.map(s => STITCH_HEIGHTS[s.type] || 0.6));
+      const verticalSpacing = maxStitchHeight + 0.3; // Add padding between rows
+
       if (pattern.mode === ConstructionMode.FLAT) {
         const rowWidth = stitchCount * 0.35;
         row.stitches.forEach((stitch, colIndex) => {
           const x = (colIndex - stitchCount / 2 + 0.5) * 0.35;
-          const z = rowIndex * 0.15;
+          const z = 0; // Keep all stitches in same plane for flat mode
           const color = stitch.color || defaultColor;
           
           const mesh = createStitchMesh(stitch.type, color);
@@ -203,7 +207,7 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
           const loop = createLoopMesh(new THREE.Vector3(x, currentY + STITCH_HEIGHTS[stitch.type], z), 0.2, 0.06, color);
           group.add(loop);
         });
-        currentY += 0.8;
+        currentY += verticalSpacing;
       } else {
         // ROUND mode logic - constant radius for uniform spacing
         const radius = stitchCount * 0.15;
@@ -221,7 +225,7 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
           const loop = createLoopMesh(new THREE.Vector3(x, currentY + STITCH_HEIGHTS[stitch.type], z), 0.2, 0.06, color);
           group.add(loop);
         });
-        currentY += 0.15;
+        currentY += verticalSpacing;
       }
     });
   };
