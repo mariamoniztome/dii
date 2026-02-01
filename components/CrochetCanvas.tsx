@@ -6,13 +6,14 @@ import { STITCH_HEIGHTS } from '../constants.tsx';
 
 interface CrochetCanvasProps {
   pattern: Pattern;
+  version?: number;
 }
 
 export interface CrochetCanvasRef {
   getCanvasElement: () => HTMLCanvasElement | null;
 }
 
-const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef, CrochetCanvasProps>(({ pattern }, ref) => {
+const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef, CrochetCanvasProps>(({ pattern, version = 0 }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const groupRef = useRef<THREE.Group | null>(null);
@@ -120,15 +121,51 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
   useEffect(() => {
     if (!groupRef.current) return;
     const group = groupRef.current;
+
+    const totalStitches = pattern.rows.reduce((sum, row) => sum + row.stitches.length, 0);
+    const expectedChildren = totalStitches * 2; // stitch mesh + loop mesh per stitch
+
+    // If structure matches, update colors in-place for better performance
+    if (group.children.length === expectedChildren && expectedChildren > 0) {
+      const defaultColor = '#f0e6dc';
+      let childIndex = 0;
+
+      pattern.rows.forEach((row) => {
+        row.stitches.forEach((stitch) => {
+          const color = stitch.color || defaultColor;
+          const stitchMesh = group.children[childIndex] as THREE.Mesh | undefined;
+          const loopMesh = group.children[childIndex + 1] as THREE.Mesh | undefined;
+
+          if (stitchMesh && stitchMesh.material && !Array.isArray(stitchMesh.material)) {
+            (stitchMesh.material as THREE.MeshPhongMaterial).color.set(color);
+          }
+          if (loopMesh && loopMesh.material && !Array.isArray(loopMesh.material)) {
+            (loopMesh.material as THREE.MeshPhongMaterial).color.set(color);
+          }
+
+          childIndex += 2;
+        });
+      });
+
+      return;
+    }
+
+    // Otherwise, rebuild the meshes
     while (group.children.length > 0) {
-      group.remove(group.children[0]);
+      const child = group.children[0];
+      if (child instanceof THREE.Mesh) {
+        child.geometry.dispose();
+        if (Array.isArray(child.material)) {
+          child.material.forEach(m => m.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+      group.remove(child);
     }
 
     renderPattern(pattern, group);
-    
-    // Calculate total stitches for dependency tracking
-    const totalStitches = pattern.rows.reduce((sum, row) => sum + row.stitches.length, 0);
-  }, [pattern, pattern.rows.length, pattern.rows.map(r => r.stitches.length).join('-')]);
+  }, [version, pattern]);
 
   // Fix: Updated color parameter to accept string | number to handle both hex strings and numeric colors
   const createStitchMesh = (type: StitchType, color: string | number, twisted: boolean = false) => {

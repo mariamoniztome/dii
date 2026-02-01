@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import CrochetCanvas, { CrochetCanvasRef } from "./components/CrochetCanvas";
 import Pattern2D, { Pattern2DRef } from "./components/Pattern2D";
 import PatternControls from "./components/PatternControls";
@@ -6,6 +6,7 @@ import { Pattern, ConstructionMode } from "./types";
 import ExportDropdown from "./components/ExportDropdown";
 import LoadingScreen from "./components/LoadingScreen";
 import Dialog from "./components/Dialog";
+import ColorPicker from "./components/ColorPicker";
 import { exportService } from "./services/exportService";
 import { soundService } from "./services/soundService";
 import { Toaster } from 'sonner';
@@ -17,6 +18,7 @@ const App: React.FC = () => {
     rows: [],
   });
 
+  const [patternVersion, setPatternVersion] = useState<number>(0);
   const [exportName, setExportName] = useState<string>("O Meu Projeto");
 
   const [activeView, setActiveView] = useState<"3d" | "2d">("3d");
@@ -67,6 +69,38 @@ const App: React.FC = () => {
   useEffect(() => {
     const rowStitchCounts = pattern.rows.map((r) => r.stitches.length);
   }, [pattern, totalStitches]);
+
+  // Optimized color change handler with minimal re-renders
+  const handleColorChange = useCallback((rowIndex: number, stitchIndex: number | null, color: string) => {
+    setPattern(prevPattern => {
+      const newPattern = { ...prevPattern };
+      const newRows = [...newPattern.rows];
+      const targetRow = { ...newRows[rowIndex] };
+      
+      if (stitchIndex === null) {
+        // Apply color to entire row
+        targetRow.stitches = targetRow.stitches.map(stitch => ({
+          ...stitch,
+          color
+        }));
+      } else {
+        // Apply color to single stitch
+        const newStitches = [...targetRow.stitches];
+        newStitches[stitchIndex] = {
+          ...newStitches[stitchIndex],
+          color
+        };
+        targetRow.stitches = newStitches;
+      }
+      
+      newRows[rowIndex] = targetRow;
+      newPattern.rows = newRows;
+      
+      return newPattern;
+    });
+    // Increment version to force Three.js re-render
+    setPatternVersion(v => v + 1);
+  }, []);
 
   // Export functions
   const normalizeExportBaseName = (rawName: string, fallback: string) => {
@@ -284,9 +318,11 @@ const App: React.FC = () => {
                 ref={canvasRef}
                 key={`${pattern.mode}-${pattern.rows.length}-${pattern.rows
                   .map((r) => r.stitches.length)
-                  .join("-")}`}
+                  .join("-")}-${patternVersion}`}
                 pattern={pattern}
+                version={patternVersion}
               />
+              <ColorPicker pattern={pattern} onColorChange={handleColorChange} />
             </div>
           )}
 
@@ -300,36 +336,11 @@ const App: React.FC = () => {
                 pattern={pattern}
                 setPattern={setPattern}
               />
+              <ColorPicker pattern={pattern} onColorChange={handleColorChange} />
             </div>
           )}
         </div>
       </main>
-
-      <div className="absolute bottom-6 left-6 flex flex-col gap-2 pointer-events-none z-10">
-          <div className="bg-white/90 backdrop-blur p-4 rounded-2xl shadow-xl border border-white/20 pointer-events-auto min-w-[180px]">
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">
-              Estatísticas
-            </h2>
-            <div className="grid grid-cols-2 gap-y-2 gap-x-4">
-              <div className="flex flex-col">
-                <span className="text-[10px] text-gray-500 uppercase">
-                  Carreiras
-                </span>
-                <span className="text-xl text-indigo-600 font-black">
-                  {pattern.rows.length}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] text-gray-500 uppercase">
-                  Pontos
-                </span>
-                <span className="text-xl text-indigo-600 font-black">
-                  {totalStitches}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Floating Pattern Feed */}
         <div className="absolute top-20 right-6 pointer-events-none z-5">
