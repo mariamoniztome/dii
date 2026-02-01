@@ -190,23 +190,23 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
       if (stitchCount === 0) return;
 
       if (pattern.mode === ConstructionMode.FLAT) {
-        const rowWidth = stitchCount * 0.8;
+        const rowWidth = stitchCount * 0.35;
         row.stitches.forEach((stitch, colIndex) => {
-          const x = (colIndex - stitchCount / 2 + 0.5) * 0.8;
-          const z = rowIndex * 0.4;
+          const x = (colIndex - stitchCount / 2 + 0.5) * 0.35;
+          const z = rowIndex * 0.15;
           const color = stitch.color || defaultColor;
           
           const mesh = createStitchMesh(stitch.type, color);
           mesh.position.set(x, currentY, z);
           group.add(mesh);
 
-          const loop = createLoopMesh(new THREE.Vector3(x, currentY + STITCH_HEIGHTS[stitch.type], z), 0.25, 0.06, color);
+          const loop = createLoopMesh(new THREE.Vector3(x, currentY + STITCH_HEIGHTS[stitch.type], z), 0.2, 0.06, color);
           group.add(loop);
         });
         currentY += 0.8;
       } else {
-        // ROUND mode logic
-        const radius = (rowIndex + 1) * 0.8;
+        // ROUND mode logic - constant radius for uniform spacing
+        const radius = stitchCount * 0.15;
         row.stitches.forEach((stitch, stIndex) => {
           const angle = (stIndex / stitchCount) * Math.PI * 2;
           const x = Math.cos(angle) * radius;
@@ -218,10 +218,10 @@ const CrochetCanvas: React.FC<CrochetCanvasProps> = forwardRef<CrochetCanvasRef,
           mesh.lookAt(0, currentY, 0); // Point towards center roughly
           group.add(mesh);
 
-          const loop = createLoopMesh(new THREE.Vector3(x, currentY + STITCH_HEIGHTS[stitch.type], z), 0.2, 0.05, color);
+          const loop = createLoopMesh(new THREE.Vector3(x, currentY + STITCH_HEIGHTS[stitch.type], z), 0.2, 0.06, color);
           group.add(loop);
         });
-        currentY += 0.4;
+        currentY += 0.15;
       }
     });
   };
